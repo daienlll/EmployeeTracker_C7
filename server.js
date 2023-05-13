@@ -1,4 +1,4 @@
-const mysql = require("mysql2");
+const mysql2 = require("mysql2");
 const inquirer = require("inquirer");
 require("console.table");
 
@@ -9,7 +9,7 @@ const connection = mysql2.createConnection({
 
     user: 'root',
 
-    password: '',
+    password: 'Praxic06',
     database: 'employees_db'
 });
 
@@ -39,6 +39,7 @@ function firstPrompt() {
             choices: [
                 "View Employees",
                 "View Employees by Department",
+                "View Roles",
                 "Add Employee",
                 "Update Employee Role",
                 "Add Role",
@@ -52,6 +53,10 @@ function firstPrompt() {
 
                 case "View Employees by Department":
                     viewEmployeeByDepartment();
+                    break;
+
+                case "View Roles":
+                    viewRoles();
                     break;
 
                 case "Add Employee":
@@ -101,13 +106,13 @@ function viewEmployeeByDepartment() {
     console.log("Viewing employees by department\n");
 
     var query =
-        `SELECT d.id, d.name, r.salary AS budget
+        `SELECT e.first_name, e.last_name, d.id, d.name, r.salary AS budget
     FROM employee e
     LEFT JOIN role r
       ON e.role_id = r.id
     LEFT JOIN department d
     ON d.id = r.department_id
-    GROUP BY d.id, d.name`
+    GROUP BY d.id, d.name, r.salary`
 
     connection.query(query, function (err, res) {
         if (err) throw err;
@@ -222,6 +227,8 @@ function promptInsert(roleChoices) {
         });
 }
 
+
+
 function updateEmployeeRole() {
     employeeArray();
 
@@ -237,7 +244,7 @@ function employeeArray() {
       ON e.role_id = r.id
     JOIN department d
     ON d.id = r.department_id
-    JOIN employee m
+    LEFT JOIN employee m
       ON m.id = e.manager_id`
 
     connection.query(query, function (err, res) {
@@ -311,7 +318,23 @@ function promptEmployeeRole(employeeChoices, roleChoices) {
         });
 }
 
+function viewRoles() {
+    console.log("Viewing Roles\n");
 
+    var query =
+        `SELECT r.id, r.title, r.salary 
+FROM role r`
+
+    connection.query(query, function (err, res) {
+        if (err) throw err;
+
+        console.table(res);
+        console.log("Roles view success!\n");
+
+        firstPrompt();
+    });
+
+};
 
 function addRole() {
 
@@ -344,12 +367,12 @@ function promptAddRole(departmentChoices) {
         .prompt([
             {
                 type: "input",
-                name: "roleTitle",
+                name: "title",
                 message: "Role title?"
             },
             {
                 type: "input",
-                name: "roleSalary",
+                name: "salary",
                 message: "Role Salary"
             },
             {
